@@ -3,13 +3,24 @@ from context import l3wtransformer
 
 class Testl3wtransformerMethods(unittest.TestCase):
 
+    def test_max_ngrams(self):
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
+        lookup_table = l3wt.fit_on_texts(['aaa bbb ccc acb'])
+        self.assertEqual(len(lookup_table), 2)
+        self.assertEqual(l3wt.max_ngrams, 2)
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=None)
+        lookup_table = l3wt.fit_on_texts(['abcdef'])
+        self.assertEqual(len(lookup_table), 6)
+        self.assertEqual(l3wt.max_ngrams, 6)
+
     def test_word_to_ngrams(self):
 
-        l3wt = l3wtransformer.L3wTransformer(trigram_size=3)
+        l3wt = l3wtransformer.L3wTransformer(ngram_size=3)
         self.assertEqual(l3wt.word_to_ngrams(''), [])
         self.assertEqual(l3wt.word_to_ngrams('aa'), ['#aa', 'aa#'])
 
-        l3wt = l3wtransformer.L3wTransformer(trigram_size=3, mark_char='ö')
+        l3wt = l3wtransformer.L3wTransformer(ngram_size=3, mark_char='ö')
         self.assertEqual(l3wt.word_to_ngrams('a'), ['öaö'])
 
 
@@ -41,9 +52,6 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt = l3wtransformer.L3wTransformer()
             l3wt.texts_to_sequences([[], []])
             l3wt.texts_to_sequences([5, 1])
-
-
-
 
 if __name__ == '__main__':
     unittest.main()

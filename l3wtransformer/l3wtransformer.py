@@ -1,18 +1,25 @@
-from functools import reduce
-from itertools import chain
 import operator
 import logging
 
 from nltk.util import ngrams
 
 class L3wTransformer:
+    """
+    Parameters
+    ----------
+    max_ngrams : The upper bound of the top n most frequent ngrams to be used. If None use all containing ngrams.
+    ngram_size : The size of the ngrams.
+    lower : Should the ngrams be treated as lower char ngrams.
+    mark_char : Char for marking the beginning and ending of a word in a ngram.
+    split_char : Delimeter for splitting strings into a list of words.
+    """
 
-    def __init__(self, max_words=50000, trigram_size=3, lower=True, mark_char='#', split_char=' '):
-        self.trigram_size = trigram_size
+    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=' '):
+        self.ngram_size = ngram_size
         self.lower = lower
         self.mark_char = mark_char
         self.split_char = split_char
-        self.max_words = max_words
+        self.max_ngrams = max_ngrams
         self.indexed_lookup_table = {}
 
     ### Helper Start ###
@@ -34,7 +41,7 @@ class L3wTransformer:
             flags.append('lo')
 
         if not word[1:].islower() and not word[1:].isupper() and word.isalpha():
-            flags.append('mc') # aB- zählt nicht als Mixed nur reihne wörter welche Mixed case enthalten werden auch als dieses gezählt
+            flags.append('mc') # 'aB-' does not count as mixed word, only pure words which containing mixed cased chars are counting
 
         return flags
 
@@ -55,35 +62,18 @@ class L3wTransformer:
 
         return flag_seq
 
-    def __add_flags_to_indexed_lookup_table(self, base_value, indexed_lookup_table):
-        #Flags
-        #initial capitalization,
-        ic = base_value + 1
-        #uppercase
-        up = base_value + 2
-        #lower case
-        lo = base_value + 3
-        #mixed case
-        mc = base_value + 4
-
-        # add flags to indexed_lookup_table
-
-        indexed_lookup_table[ic] = ic
-        indexed_lookup_table[up] = up
-        indexed_lookup_table[lo] = lo
-        indexed_lookup_table[mc] = mc
-
-        return indexed_lookup_table
-
     ### Helper End ###
 
     def word_to_ngrams(self, word):
+        """Returns a list of all n-gram possibilities of the given word."""
         if self.lower:
             word = word.lower()
         word = self.mark_char + word + self.mark_char
-        return list( map(lambda x: ''.join(x), list(ngrams(word, self.trigram_size))) )
+        return list( map(lambda x: ''.join(x), list(ngrams(word, self.ngram_size))) )
 
     def scan_paragraphs(self, paragraphs):
+        """Creates a lookup table from the given paragraphs, containing all
+        n-gram frequencies."""
         lookup_table = {}
         paras_len = len(paragraphs)
 
@@ -105,11 +95,13 @@ class L3wTransformer:
         return lookup_table
 
     def text_to_sequence(self, text, indexed_lookup_table):
+        """Transforms a list of strings into a list of integer sequences from
+        indexed lookup table."""
         trigrams = []
 
         for word in text.split(self.split_char):
             ngrams_w = self.word_to_ngrams(word)
-            flags = self.__flags_to_sequence(self.__flags_from_word(word), base_value=self.max_words)
+            flags = self.__flags_to_sequence(self.__flags_from_word(word), base_value=self.max_ngrams)
             trigrams.append( (ngrams_w, flags) )
 
         seq = []
@@ -125,28 +117,34 @@ class L3wTransformer:
         return seq
 
     def texts_to_sequences(self, texts):
-
+        """Convenient method to tansform new texts into integer sequences."""
         if not texts:
             return []
 
         return list(map(lambda text: self.text_to_sequence(text, self.indexed_lookup_table), texts))
 
     def fit_on_texts(self, texts):
-
+        """Convenient method for creating a indexed lookup table,
+        necessary to transform text into a integer sequence. Always call this before
+        texts_to_sequences method to get results.
+        Returns the indexed lookup table."""
         if not texts:
             return []
 
         lookup_table = self.scan_paragraphs(texts)
-        cutted_lookup_table = dict(sorted(lookup_table.items(), key=operator.itemgetter(1), reverse=True)[:self.max_words])
+
+        if not self.max_ngrams:
+            self.max_ngrams = len(lookup_table)
+
+        cutted_lookup_table = dict(sorted(lookup_table.items(), key=operator.itemgetter(1), reverse=True)[:self.max_ngrams])
         # before cutted_lookup_table.items() are sorted by their counts, sort cutted_lookup_table.items() alphabetical
         # to preserve same order by items with same count.
         # Example: cutted_lookup_table.items() could by [('aa', 1), ('a', 1)] or [('a', 1), ('aa', 1)]
         sorted_lookup = sorted(sorted(cutted_lookup_table.items()), key=operator.itemgetter(1), reverse=True)
         indexed_lookup_table = dict(
-                            zip(list(zip(*sorted_lookup[:self.max_words]))[0], # get only the max_words frequent tri grams
-                                list(range(1, self.max_words + 1)))
+                            zip(list(zip(*sorted_lookup[:self.max_ngrams]))[0], # get only the max_ngrams frequent tri grams
+                                list(range(1, self.max_ngrams + 1)))
                             )
 
-        self.indexed_lookup_table = self.__add_flags_to_indexed_lookup_table(self.max_words, indexed_lookup_table)
-
+        self.indexed_lookup_table = indexed_lookup_table
         return self.indexed_lookup_table
