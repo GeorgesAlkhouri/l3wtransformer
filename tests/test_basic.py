@@ -30,10 +30,17 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt.scan_paragraphs('s')
             l3wt.scan_paragraphs(['a', 5])
 
-    # def test_texts_to_sequences(self):
-    #     #self.assertEqual(l3wtransformer.text_to_sequence())
-    #     l3wt = l3wtransformer.L3wTransformer()
-    #     print(l3wt.texts_to_sequences(['Das ist eine Test, Iphone 5s', 'Haushaufgaben sind naja.']))
+    def test_texts_to_sequences(self):
+        l3wt = l3wtransformer.L3wTransformer()
+        self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [[], []])
+
+        l3wt.fit_on_texts(['aaa'])
+        self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [[1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
+
+        with self.assertRaises(Exception):
+            l3wt = l3wtransformer.L3wTransformer()
+            l3wt.texts_to_sequences([[], []])
+            l3wt.texts_to_sequences([5, 1])
 
 
 

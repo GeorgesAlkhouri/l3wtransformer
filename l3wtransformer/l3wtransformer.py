@@ -13,6 +13,7 @@ class L3wTransformer:
         self.mark_char = mark_char
         self.split_char = split_char
         self.max_words = max_words
+        self.indexed_lookup_table = {}
 
     ### Helper Start ###
 
@@ -124,13 +125,28 @@ class L3wTransformer:
         return seq
 
     def texts_to_sequences(self, texts):
+
+        if not texts:
+            return []
+
+        return list(map(lambda text: self.text_to_sequence(text, self.indexed_lookup_table), texts))
+
+    def fit_on_texts(self, texts):
+
+        if not texts:
+            return []
+
         lookup_table = self.scan_paragraphs(texts)
         cutted_lookup_table = dict(sorted(lookup_table.items(), key=operator.itemgetter(1), reverse=True)[:self.max_words])
-        sorted_lookup = sorted(cutted_lookup_table.items(), key=operator.itemgetter(1), reverse=True)
+        # before cutted_lookup_table.items() are sorted by their counts, sort cutted_lookup_table.items() alphabetical
+        # to preserve same order by items with same count.
+        # Example: cutted_lookup_table.items() could by [('aa', 1), ('a', 1)] or [('a', 1), ('aa', 1)]
+        sorted_lookup = sorted(sorted(cutted_lookup_table.items()), key=operator.itemgetter(1), reverse=True)
         indexed_lookup_table = dict(
                             zip(list(zip(*sorted_lookup[:self.max_words]))[0], # get only the max_words frequent tri grams
                                 list(range(1, self.max_words + 1)))
                             )
 
-        indexed_lookup_table = self.__add_flags_to_indexed_lookup_table(self.max_words, indexed_lookup_table)
-        return list(map(lambda text: self.text_to_sequence(text, indexed_lookup_table), texts))
+        self.indexed_lookup_table = self.__add_flags_to_indexed_lookup_table(self.max_words, indexed_lookup_table)
+
+        return self.indexed_lookup_table
