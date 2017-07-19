@@ -3,6 +3,7 @@ import logging
 
 from nltk.util import ngrams
 
+
 class L3wTransformer:
     """
     Parameters
@@ -41,7 +42,8 @@ class L3wTransformer:
             flags.append('lo')
 
         if not word[1:].islower() and not word[1:].isupper() and word.isalpha():
-            flags.append('mc') # 'aB-' does not count as mixed word, only pure words which containing mixed cased chars are counting
+            # 'aB-' does not count as mixed word, only pure words which containing mixed cased chars are counting
+            flags.append('mc')
 
         return flags
 
@@ -69,7 +71,7 @@ class L3wTransformer:
         if self.lower:
             word = word.lower()
         word = self.mark_char + word + self.mark_char
-        return list( map(lambda x: ''.join(x), list(ngrams(word, self.ngram_size))) )
+        return list(map(lambda x: ''.join(x), list(ngrams(word, self.ngram_size))))
 
     def scan_paragraphs(self, paragraphs):
         """Creates a lookup table from the given paragraphs, containing all
@@ -79,7 +81,7 @@ class L3wTransformer:
 
         for idx, para in enumerate(paragraphs):
 
-            logging.info(str(idx+1) + ' of ' + str(paras_len))
+            logging.info(str(idx + 1) + ' of ' + str(paras_len))
             # sys.stdout.write(str(idx+1) + ' of ' + str(paras_len)+'\r')
             # sys.stdout.flush()
 
@@ -101,8 +103,9 @@ class L3wTransformer:
 
         for word in text.split(self.split_char):
             ngrams_w = self.word_to_ngrams(word)
-            flags = self.__flags_to_sequence(self.__flags_from_word(word), base_value=self.max_ngrams)
-            trigrams.append( (ngrams_w, flags) )
+            flags = self.__flags_to_sequence(
+                self.__flags_from_word(word), base_value=self.max_ngrams)
+            trigrams.append((ngrams_w, flags))
 
         seq = []
         for trigram_tuple in trigrams:
@@ -110,7 +113,8 @@ class L3wTransformer:
                 if trigram in indexed_lookup_table:
                     seq.append(indexed_lookup_table[trigram])
                 else:
-                    logging.info(str(trigram) + ' not in indexed lookup table.')
+                    logging.info(str(trigram) +
+                                 ' not in indexed lookup table.')
             if seq:
                 for flag in trigram_tuple[1]:
                     seq.append(flag)
@@ -136,15 +140,17 @@ class L3wTransformer:
         if not self.max_ngrams:
             self.max_ngrams = len(lookup_table)
 
-        cutted_lookup_table = dict(sorted(lookup_table.items(), key=operator.itemgetter(1), reverse=True)[:self.max_ngrams])
+        cutted_lookup_table = dict(sorted(lookup_table.items(
+        ), key=operator.itemgetter(1), reverse=True)[:self.max_ngrams])
         # before cutted_lookup_table.items() are sorted by their counts, sort cutted_lookup_table.items() alphabetical
         # to preserve same order by items with same count.
         # Example: cutted_lookup_table.items() could by [('aa', 1), ('a', 1)] or [('a', 1), ('aa', 1)]
-        sorted_lookup = sorted(sorted(cutted_lookup_table.items()), key=operator.itemgetter(1), reverse=True)
+        sorted_lookup = sorted(
+            sorted(cutted_lookup_table.items()), key=operator.itemgetter(1), reverse=True)
         indexed_lookup_table = dict(
-                            zip(list(zip(*sorted_lookup[:self.max_ngrams]))[0], # get only the max_ngrams frequent tri grams
-                                list(range(1, self.max_ngrams + 1)))
-                            )
+            zip(list(zip(*sorted_lookup[:self.max_ngrams]))[0],  # get only the max_ngrams frequent tri grams
+                list(range(1, self.max_ngrams + 1)))
+        )
 
         self.indexed_lookup_table = indexed_lookup_table
         return self.indexed_lookup_table

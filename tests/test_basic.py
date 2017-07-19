@@ -1,6 +1,7 @@
 import unittest
 from context import l3wtransformer
 
+
 class Testl3wtransformerMethods(unittest.TestCase):
 
     def test_max_ngrams(self):
@@ -23,11 +24,11 @@ class Testl3wtransformerMethods(unittest.TestCase):
         l3wt = l3wtransformer.L3wTransformer(ngram_size=3, mark_char='ö')
         self.assertEqual(l3wt.word_to_ngrams('a'), ['öaö'])
 
-
     def test_scan_paragraphs(self):
         l3wt = l3wtransformer.L3wTransformer()
         self.assertEqual(l3wt.scan_paragraphs([]), {})
-        self.assertEqual(l3wt.scan_paragraphs(['a', 'b']), {'#a#': 1, '#b#': 1})
+        self.assertEqual(l3wt.scan_paragraphs(
+            ['a', 'b']), {'#a#': 1, '#b#': 1})
         self.assertEqual(l3wt.scan_paragraphs(['a', 'a']), {'#a#': 2})
         self.assertEqual(l3wt.scan_paragraphs(['a b']), {'#a#': 1, '#b#': 1})
 
@@ -43,15 +44,18 @@ class Testl3wtransformerMethods(unittest.TestCase):
 
     def test_texts_to_sequences(self):
         l3wt = l3wtransformer.L3wTransformer()
-        self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [[], []])
+        self.assertEqual(l3wt.texts_to_sequences(
+            ['Aaa aAa aaa AAA', 'Abb aba BbB']), [[], []])
 
         l3wt.fit_on_texts(['aaa'])
-        self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [[1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
+        self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [
+                         [1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
 
         with self.assertRaises(Exception):
             l3wt = l3wtransformer.L3wTransformer()
             l3wt.texts_to_sequences([[], []])
             l3wt.texts_to_sequences([5, 1])
+
 
 if __name__ == '__main__':
     unittest.main()
