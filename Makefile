@@ -2,4 +2,4 @@ build:
 	python setup.py build
 
 test:
-	py.test tests/
+	py.test -s tests/
