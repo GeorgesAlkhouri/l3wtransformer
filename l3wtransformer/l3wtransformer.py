@@ -15,7 +15,7 @@ class L3wTransformer:
     split_char : Delimeter for splitting strings into a list of words.
     """
 
-    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=' '):
+    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=None):
         self.ngram_size = ngram_size
         self.lower = lower
         self.mark_char = mark_char
