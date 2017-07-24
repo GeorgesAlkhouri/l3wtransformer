@@ -6,7 +6,7 @@
 
 ---
 
-This implementation supports the transformation from **text into sequenzes of numbers**, with the numbers indicating the descending word frequency.
+This implementation supports the transformation from **text into sequences of numbers**, with the numbers indicating the descending word frequency.
 
 For example:
 
