@@ -1,6 +1,6 @@
 # l3wtransformer
 
-> A word hashing method to reduce the dimensionality of the bag-of-words term vectors. It is based on letter n-gram. Given a word (e.g. good), it first adds word starting and ending marks to the word (e.g. #good#). Then, we break the word into letter n-grams (e.g. letter trigrams: #go, goo, ood, od#). Finally, the word is represented using a vector of letter n-grams. 
+> A word hashing method to reduce the dimensionality of the bag-of-words term vectors. It is based on letter n-gram. Given a word (e.g. good), it first adds word starting and ending marks to the word (e.g. #good#). Then, breaks the word into letter n-grams (e.g. letter trigrams: #go, goo, ood, od#). Finally, the word is represented using a vector of letter n-grams. 
 
 [Huang et al.2013, Learning Deep Structured Semantic Mod- els for Web Search using Clickthrough Data]
 
