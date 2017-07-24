@@ -17,3 +17,16 @@ Also, after each word flags indicating lower case, upper case, mixed case or ini
 ### To do
 
 There will be an implementation supporting the transformation from **text into bag-of-word vectors**.
+
+## Usage
+
+```
+import l3wtransformer
+
+l3wt = l3wtransformer.L3wTransformer()
+
+l3wt.fit_on_texts(['First example.', 'And one more!'])
+l3wt.texts_to_sequences(['One example', '2nd exa.'])
+
+# [[5, 18, 17, 50001, 2, 10, 24, 6, 15, 20, 50003], [16, 50003, 2, 10, 50003]]
+```
