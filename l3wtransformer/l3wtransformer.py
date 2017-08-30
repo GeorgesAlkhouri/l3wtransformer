@@ -1,5 +1,6 @@
 import operator
 import logging
+import pickle
 
 from nltk.util import ngrams
 
@@ -22,6 +23,22 @@ class L3wTransformer:
         self.split_char = split_char
         self.max_ngrams = max_ngrams
         self.indexed_lookup_table = {}
+
+    @staticmethod
+    def load(path):
+        with open(path, 'rb') as f:
+            dump_dict = pickle.load(f)
+
+        l3wt = L3wTransformer(
+            max_ngrams=dump_dict['max_ngrams'],
+            ngram_size=dump_dict['ngram_size'],
+            lower=dump_dict['lower'],
+            mark_char=dump_dict['mark_char'],
+            split_char=dump_dict['split_char']
+        )
+
+        l3wt.indexed_lookup_table = dump_dict['indexed_lookup_table']
+        return l3wt
 
     ### Helper Start ###
 
@@ -65,6 +82,18 @@ class L3wTransformer:
         return flag_seq
 
     ### Helper End ###
+
+    def save(self, path):
+        dump_dict = {
+            'ngram_size': self.ngram_size,
+            'lower': self.lower,
+            'mark_char': self.mark_char,
+            'split_char': self.split_char,
+            'max_ngrams': self.max_ngrams,
+            'indexed_lookup_table': self.indexed_lookup_table
+        }
+        with open(path, 'wb') as f:
+            pickle.dump(dump_dict, f)
 
     def word_to_ngrams(self, word):
         """Returns a list of all n-gram possibilities of the given word."""
