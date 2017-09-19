@@ -166,16 +166,18 @@ class L3wTransformer:
 
         lookup_table = self.scan_paragraphs(texts)
 
+        if not lookup_table:
+            return {}
+
         if not self.max_ngrams:
             self.max_ngrams = len(lookup_table)
 
-        cutted_lookup_table = dict(sorted(lookup_table.items(
-        ), key=operator.itemgetter(1), reverse=True)[:self.max_ngrams])
         # before cutted_lookup_table.items() are sorted by their counts, sort cutted_lookup_table.items() alphabetical
         # to preserve same order by items with same count.
         # Example: cutted_lookup_table.items() could by [('aa', 1), ('a', 1)] or [('a', 1), ('aa', 1)]
-        sorted_lookup = sorted(
-            sorted(cutted_lookup_table.items()), key=operator.itemgetter(1), reverse=True)
+        sorted_lookup = sorted(lookup_table.items(), key=operator.itemgetter(0), reverse=False)
+        cutted_lookup_table = dict(sorted_lookup[:self.max_ngrams])
+
         indexed_lookup_table = dict(
             zip(list(zip(*sorted_lookup[:self.max_ngrams]))[0],  # get only the max_ngrams frequent tri grams
                 list(range(1, self.max_ngrams + 1)))

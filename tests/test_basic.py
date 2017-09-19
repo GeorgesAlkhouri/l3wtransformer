@@ -48,12 +48,45 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt.scan_paragraphs('s')
             l3wt.scan_paragraphs(['a', 5])
 
+    def test_max_ngrams(self):
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
+        lookup_table = l3wt.fit_on_texts(['abc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
+        lookup_table = l3wt.fit_on_texts(['abc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
+        lookup_table = l3wt.fit_on_texts(['abcd'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
+        lookup_table = l3wt.fit_on_texts(['abc adc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, '#ad': 2, 'abc' : 3, 'adc': 4})
+
+    def test_empty(self):
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
+
+        lookup_table = l3wt.fit_on_texts(['', ''])
+        self.assertEqual(l3wt.texts_to_sequences(['']), [[]])
+
+        lookup_table = l3wt.fit_on_texts(['', 'addsd'])
+        self.assertEqual(l3wt.texts_to_sequences(['']), [[]])
+
+        lookup_table = l3wt.fit_on_texts([''])
+        self.assertEqual(l3wt.texts_to_sequences(['', '']), [[], []])
+
     def test_texts_to_sequences(self):
         l3wt = l3wtransformer.L3wTransformer()
         self.assertEqual(l3wt.texts_to_sequences(
             ['Aaa aAa aaa AAA', 'Abb aba BbB']), [[], []])
 
-        l3wt.fit_on_texts(['aaa'])
+        lookup_table = l3wt.fit_on_texts(['aaa'])
         self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [
                          [1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
 
