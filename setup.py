@@ -11,18 +11,18 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='letter-trigram-word-hashing',
+    name='l3wtransformer',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.1.0',
 
-    description='A sample Python project',
+    description='A word hashing method based on vectors of letter n-grams. Currently transforms text into sequences of numbers.',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/GeorgesAlkhouri/letter-trigram-word-hashing',
+    url='https://github.com/GeorgesAlkhouri/l3wtransformer',
 
     # Author details
     author='Georges Alkhouri',
