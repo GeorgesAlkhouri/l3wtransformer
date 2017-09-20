@@ -1,7 +1,9 @@
 import operator
 import logging
 import pickle
+from functools import reduce
 
+from pathos.multiprocessing import ProcessingPool as Pool
 from nltk.util import ngrams
 
 
@@ -108,14 +110,10 @@ class L3wTransformer:
         lookup_table = {}
         paras_len = len(paragraphs)
 
-        for idx, para in enumerate(paragraphs):
+        with Pool(None) as p:
+            paragraphs = p.map(lambda para: para.split(self.split_char), paragraphs)
 
-            logging.info(str(idx + 1) + ' of ' + str(paras_len))
-            # sys.stdout.write(str(idx+1) + ' of ' + str(paras_len)+'\r')
-            # sys.stdout.flush()
-
-            words = para.split(self.split_char)
-
+        def fill_lookup_table(lookup_table, words):
             for w in words:
                 ngrams_w = self.word_to_ngrams(w)
                 for n in ngrams_w:
@@ -123,6 +121,10 @@ class L3wTransformer:
                         lookup_table[n] = lookup_table[n] + 1
                     else:
                         lookup_table[n] = 1
+            return lookup_table
+
+        lookup_table = reduce(fill_lookup_table, paragraphs, {})
+
         return lookup_table
 
     def text_to_sequence(self, text, indexed_lookup_table):
@@ -154,7 +156,10 @@ class L3wTransformer:
         if not texts:
             return []
 
-        return list(map(lambda text: self.text_to_sequence(text, self.indexed_lookup_table), texts))
+        with Pool(None) as p:
+            res = p.map(lambda text: self.text_to_sequence(text, self.indexed_lookup_table), texts)
+
+        return res
 
     def fit_on_texts(self, texts):
         """Convenient method for creating a indexed lookup table,

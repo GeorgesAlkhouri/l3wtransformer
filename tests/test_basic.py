@@ -21,6 +21,25 @@ class Testl3wtransformerMethods(unittest.TestCase):
         self.assertEqual(len(lookup_table), 6)
         self.assertEqual(l3wt.max_ngrams, 6)
 
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
+        lookup_table = l3wt.fit_on_texts(['abc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
+        lookup_table = l3wt.fit_on_texts(['abc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
+        lookup_table = l3wt.fit_on_texts(['abcd'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, 'abc': 2})
+
+        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
+        lookup_table = l3wt.fit_on_texts(['abc adc'])
+
+        self.assertEqual(lookup_table ,{'#ab': 1, '#ad': 2, 'abc' : 3, 'adc': 4})
     def test_word_to_ngrams(self):
 
         l3wt = l3wtransformer.L3wTransformer(ngram_size=3)
@@ -48,27 +67,6 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt.scan_paragraphs('s')
             l3wt.scan_paragraphs(['a', 5])
 
-    def test_max_ngrams(self):
-        l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
-        lookup_table = l3wt.fit_on_texts(['abc'])
-
-        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
-
-        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
-        lookup_table = l3wt.fit_on_texts(['abc'])
-
-        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
-
-        l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
-        lookup_table = l3wt.fit_on_texts(['abcd'])
-
-        self.assertEqual(lookup_table ,{'#ab': 1, 'abc': 2})
-
-        l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
-        lookup_table = l3wt.fit_on_texts(['abc adc'])
-
-        self.assertEqual(lookup_table ,{'#ab': 1, '#ad': 2, 'abc' : 3, 'adc': 4})
-
     def test_empty(self):
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
 
@@ -94,10 +92,6 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt = l3wtransformer.L3wTransformer()
             l3wt.texts_to_sequences([[], []])
             l3wt.texts_to_sequences([5, 1])
-
-    def test_texts_to_sparse(self):
-        l3wt = l3wtransformer.L3wTransformer()
-        l3wt.fit_on_texts(['aaa'])
 
     def test_save_and_load(self):
 
@@ -128,7 +122,6 @@ class Testl3wtransformerMethods(unittest.TestCase):
         self.assertEqual(test_indexed_lookup_table,
                          loaded_l3wt.indexed_lookup_table)
         self.assertEqual(loaded_l3wt.texts_to_sequences(['ab']), [[1, 103]])
-
 
 if __name__ == '__main__':
     unittest.main()

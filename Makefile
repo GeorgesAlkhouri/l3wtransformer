@@ -4,7 +4,10 @@ build:
 	python setup.py bdist_wheel --universal
 
 test:
-	py.test -s tests/
+	py.test -s --ignore tests/test_benchmark.py tests/
+
+benchmark:
+	py.test -s tests/test_benchmark.py
 
 upload:
 	twine upload dist/*
