@@ -18,13 +18,14 @@ class L3wTransformer:
     split_char : Delimeter for splitting strings into a list of words.
     """
 
-    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=None):
+    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=None, parallelize=False):
         self.ngram_size = ngram_size
         self.lower = lower
         self.mark_char = mark_char
         self.split_char = split_char
         self.max_ngrams = max_ngrams
         self.indexed_lookup_table = {}
+        self.parallelize = parallelize
 
     @staticmethod
     def load(path):
@@ -36,7 +37,8 @@ class L3wTransformer:
             ngram_size=dump_dict['ngram_size'],
             lower=dump_dict['lower'],
             mark_char=dump_dict['mark_char'],
-            split_char=dump_dict['split_char']
+            split_char=dump_dict['split_char'],
+            parallelize=dump_dict['parallelize']
         )
 
         l3wt.indexed_lookup_table = dump_dict['indexed_lookup_table']
@@ -46,25 +48,32 @@ class L3wTransformer:
 
     def __flags_from_word(self, word):
 
-        flags = []
+        # flags = []
+        #
+        # isIc = word[0].isupper()
+        # isUp = word.isupper()
+        # isLo = word.islower()
+        # isMc = not isIc or (not isUp and not isLo)
+        #
+        # if isIc and not isUp:
+        #     flags.append('ic')
+        # elif isIc and isUp:
+        #     flags.append('up')
+        # elif isLo:
+        #     flags.append('lo')
+        #
+        # if not word[1:].islower() and not word[1:].isupper() and word.isalpha():
+        #     # 'aB-' does not count as mixed word, only pure words which containing mixed cased chars are counting
+        #     flags.append('mc')
 
-        isIc = word[0].isupper()
-        isUp = word.isupper()
-        isLo = word.islower()
-        isMc = not isIc or (not isUp and not isLo)
-
-        if isIc and not isUp:
-            flags.append('ic')
-        elif isIc and isUp:
-            flags.append('up')
-        elif isLo:
-            flags.append('lo')
-
-        if not word[1:].islower() and not word[1:].isupper() and word.isalpha():
-            # 'aB-' does not count as mixed word, only pure words which containing mixed cased chars are counting
-            flags.append('mc')
-
-        return flags
+        if word.lower() == word:
+            return ['lo']
+        elif word.upper() == word:
+            return ['up']
+        elif word[0].upper() == word[0]:
+            return ['ic']
+        else:
+            return ['mc']
 
     def __flags_to_sequence(self, flags, base_value=0):
         flag_seq = []
@@ -92,7 +101,8 @@ class L3wTransformer:
             'mark_char': self.mark_char,
             'split_char': self.split_char,
             'max_ngrams': self.max_ngrams,
-            'indexed_lookup_table': self.indexed_lookup_table
+            'indexed_lookup_table': self.indexed_lookup_table,
+            'parallelize': self.parallelize
         }
         with open(path, 'wb') as f:
             pickle.dump(dump_dict, f)
@@ -110,8 +120,13 @@ class L3wTransformer:
         lookup_table = {}
         paras_len = len(paragraphs)
 
-        with Pool(None) as p:
-            paragraphs = p.map(lambda para: para.split(self.split_char), paragraphs)
+        if self.parallelize:
+            with Pool(None) as p:
+                paragraphs = p.map(lambda para: para.split(
+                    self.split_char), paragraphs)
+        else:
+            paragraphs = map(lambda para: para.split(
+                self.split_char), paragraphs)
 
         def fill_lookup_table(lookup_table, words):
             for w in words:
@@ -156,8 +171,12 @@ class L3wTransformer:
         if not texts:
             return []
 
-        with Pool(None) as p:
-            res = p.map(lambda text: self.text_to_sequence(text, self.indexed_lookup_table), texts)
+        if self.parallelize:
+            with Pool(None) as p:
+                res = p.map(lambda text: self.text_to_sequence(
+                    text, self.indexed_lookup_table), texts)
+        res = list(map(lambda text: self.text_to_sequence(
+            text, self.indexed_lookup_table), texts))
 
         return res
 
@@ -180,7 +199,8 @@ class L3wTransformer:
         # before cutted_lookup_table.items() are sorted by their counts, sort cutted_lookup_table.items() alphabetical
         # to preserve same order by items with same count.
         # Example: cutted_lookup_table.items() could by [('aa', 1), ('a', 1)] or [('a', 1), ('aa', 1)]
-        sorted_lookup = sorted(lookup_table.items(), key=operator.itemgetter(0), reverse=False)
+        sorted_lookup = sorted(lookup_table.items(),
+                               key=operator.itemgetter(0), reverse=False)
         cutted_lookup_table = dict(sorted_lookup[:self.max_ngrams])
 
         indexed_lookup_table = dict(

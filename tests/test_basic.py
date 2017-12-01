@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from context import l3wtransformer
 
 import os
@@ -24,22 +25,24 @@ class Testl3wtransformerMethods(unittest.TestCase):
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
         lookup_table = l3wt.fit_on_texts(['abc'])
 
-        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+        self.assertEqual(lookup_table, {'#ab': 1, 'bc#': 3, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
         lookup_table = l3wt.fit_on_texts(['abc'])
 
-        self.assertEqual(lookup_table ,{'#ab': 1, 'bc#': 3, 'abc': 2})
+        self.assertEqual(lookup_table, {'#ab': 1, 'bc#': 3, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
         lookup_table = l3wt.fit_on_texts(['abcd'])
 
-        self.assertEqual(lookup_table ,{'#ab': 1, 'abc': 2})
+        self.assertEqual(lookup_table, {'#ab': 1, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
         lookup_table = l3wt.fit_on_texts(['abc adc'])
 
-        self.assertEqual(lookup_table ,{'#ab': 1, '#ad': 2, 'abc' : 3, 'adc': 4})
+        self.assertEqual(
+            lookup_table, {'#ab': 1, '#ad': 2, 'abc': 3, 'adc': 4})
+
     def test_word_to_ngrams(self):
 
         l3wt = l3wtransformer.L3wTransformer(ngram_size=3)
@@ -93,6 +96,20 @@ class Testl3wtransformerMethods(unittest.TestCase):
             l3wt.texts_to_sequences([[], []])
             l3wt.texts_to_sequences([5, 1])
 
+    # def test_numpy_input(self):
+    #     l3wt = l3wtransformer.L3wTransformer()
+    #     self.assertEqual(l3wt.texts_to_sequences(
+    #         np.array(['Aaa aAa aaa AAA', 'Abb aba BbB'])), [[], []])
+    #
+    #     lookup_table = l3wt.fit_on_texts(np.array(['aaa']))
+    #     self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [
+    #                      [1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
+    #
+    #     with self.assertRaises(Exception):
+    #         l3wt = l3wtransformer.L3wTransformer()
+    #         l3wt.texts_to_sequences([[], []])
+    #         l3wt.texts_to_sequences([5, 1])
+
     def test_save_and_load(self):
 
         path = './tests/temp_l3wt_dict'
@@ -103,9 +120,10 @@ class Testl3wtransformerMethods(unittest.TestCase):
         mark_char = '#'
         split_char = None
         max_ngrams = 100
+        parallelize = True
 
         l3wt = l3wtransformer.L3wTransformer(
-            ngram_size=3, lower=True, mark_char='#', split_char=None, max_ngrams=100)
+            ngram_size=3, lower=True, mark_char='#', split_char=None, max_ngrams=100, parallelize=parallelize)
         l3wt.fit_on_texts(['abc'])
 
         l3wt.save(path)
@@ -119,9 +137,11 @@ class Testl3wtransformerMethods(unittest.TestCase):
         self.assertEqual(mark_char, loaded_l3wt.mark_char)
         self.assertEqual(split_char, loaded_l3wt.split_char)
         self.assertEqual(max_ngrams, loaded_l3wt.max_ngrams)
+        self.assertEqual(parallelize, loaded_l3wt.parallelize)
         self.assertEqual(test_indexed_lookup_table,
                          loaded_l3wt.indexed_lookup_table)
         self.assertEqual(loaded_l3wt.texts_to_sequences(['ab']), [[1, 103]])
+
 
 if __name__ == '__main__':
     unittest.main()
