@@ -14,14 +14,12 @@ class L3wTransformer:
     max_ngrams : The upper bound of the top n most frequent ngrams to be used. If None use all containing ngrams.
     ngram_size : The size of the ngrams.
     lower : Should the ngrams be treated as lower char ngrams.
-    mark_char : Char for marking the beginning and ending of a word in a ngram.
     split_char : Delimeter for splitting strings into a list of words.
     """
 
-    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, mark_char='#', split_char=None, parallelize=False):
+    def __init__(self, max_ngrams=50000, ngram_size=3, lower=True, split_char=None, parallelize=False):
         self.ngram_size = ngram_size
         self.lower = lower
-        self.mark_char = mark_char
         self.split_char = split_char
         self.max_ngrams = max_ngrams
         self.indexed_lookup_table = {}
@@ -36,7 +34,6 @@ class L3wTransformer:
             max_ngrams=dump_dict['max_ngrams'],
             ngram_size=dump_dict['ngram_size'],
             lower=dump_dict['lower'],
-            mark_char=dump_dict['mark_char'],
             split_char=dump_dict['split_char'],
             parallelize=dump_dict['parallelize']
         )
@@ -98,7 +95,6 @@ class L3wTransformer:
         dump_dict = {
             'ngram_size': self.ngram_size,
             'lower': self.lower,
-            'mark_char': self.mark_char,
             'split_char': self.split_char,
             'max_ngrams': self.max_ngrams,
             'indexed_lookup_table': self.indexed_lookup_table,
@@ -111,7 +107,7 @@ class L3wTransformer:
         """Returns a list of all n-gram possibilities of the given word."""
         if self.lower:
             word = word.lower()
-        word = self.mark_char + word + self.mark_char
+        word = '<' + word + '>'
         return list(map(lambda x: ''.join(x), list(ngrams(word, self.ngram_size))))
 
     def scan_paragraphs(self, paragraphs):

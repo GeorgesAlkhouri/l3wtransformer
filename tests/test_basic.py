@@ -25,43 +25,40 @@ class Testl3wtransformerMethods(unittest.TestCase):
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=3)
         lookup_table = l3wt.fit_on_texts(['abc'])
 
-        self.assertEqual(lookup_table, {'#ab': 1, 'bc#': 3, 'abc': 2})
+        self.assertEqual(lookup_table, {'<ab': 1, 'bc>': 3, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
         lookup_table = l3wt.fit_on_texts(['abc'])
 
-        self.assertEqual(lookup_table, {'#ab': 1, 'bc#': 3, 'abc': 2})
+        self.assertEqual(lookup_table, {'<ab': 1, 'bc>': 3, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=2)
         lookup_table = l3wt.fit_on_texts(['abcd'])
 
-        self.assertEqual(lookup_table, {'#ab': 1, 'abc': 2})
+        self.assertEqual(lookup_table, {'<ab': 1, 'abc': 2})
 
         l3wt = l3wtransformer.L3wTransformer(max_ngrams=4)
         lookup_table = l3wt.fit_on_texts(['abc adc'])
 
         self.assertEqual(
-            lookup_table, {'#ab': 1, '#ad': 2, 'abc': 3, 'adc': 4})
+            lookup_table, {'<ab': 1, '<ad': 2, 'abc': 3, 'adc': 4})
 
     def test_word_to_ngrams(self):
 
         l3wt = l3wtransformer.L3wTransformer(ngram_size=3)
         self.assertEqual(l3wt.word_to_ngrams(''), [])
-        self.assertEqual(l3wt.word_to_ngrams('aa'), ['#aa', 'aa#'])
-
-        l3wt = l3wtransformer.L3wTransformer(ngram_size=3, mark_char='ö')
-        self.assertEqual(l3wt.word_to_ngrams('a'), ['öaö'])
+        self.assertEqual(l3wt.word_to_ngrams('aa'), ['<aa', 'aa>'])
 
     def test_scan_paragraphs(self):
         l3wt = l3wtransformer.L3wTransformer()
         self.assertEqual(l3wt.scan_paragraphs([]), {})
         self.assertEqual(l3wt.scan_paragraphs(
-            ['a', 'b']), {'#a#': 1, '#b#': 1})
-        self.assertEqual(l3wt.scan_paragraphs(['a', 'a']), {'#a#': 2})
-        self.assertEqual(l3wt.scan_paragraphs(['a b']), {'#a#': 1, '#b#': 1})
+            ['a', 'b']), {'<a>': 1, '<b>': 1})
+        self.assertEqual(l3wt.scan_paragraphs(['a', 'a']), {'<a>': 2})
+        self.assertEqual(l3wt.scan_paragraphs(['a b']), {'<a>': 1, '<b>': 1})
 
         l3wt = l3wtransformer.L3wTransformer(split_char='ö')
-        self.assertEqual(l3wt.scan_paragraphs(['aöb']), {'#a#': 1, '#b#': 1})
+        self.assertEqual(l3wt.scan_paragraphs(['aöb']), {'<a>': 1, '<b>': 1})
 
         with self.assertRaises(Exception):
             l3wt = l3wtransformer.L3wTransformer()
@@ -114,16 +111,15 @@ class Testl3wtransformerMethods(unittest.TestCase):
 
         path = './tests/temp_l3wt_dict'
 
-        test_indexed_lookup_table = {'#ab': 1, 'abc': 2, 'bc#': 3}
+        test_indexed_lookup_table = {'<ab': 1, 'abc': 2, 'bc>': 3}
         ngram_size = 3
         lower = True
-        mark_char = '#'
         split_char = None
         max_ngrams = 100
         parallelize = True
 
         l3wt = l3wtransformer.L3wTransformer(
-            ngram_size=3, lower=True, mark_char='#', split_char=None, max_ngrams=100, parallelize=parallelize)
+            ngram_size=3, lower=True, split_char=None, max_ngrams=100, parallelize=parallelize)
         l3wt.fit_on_texts(['abc'])
 
         l3wt.save(path)
@@ -134,7 +130,6 @@ class Testl3wtransformerMethods(unittest.TestCase):
             loaded_l3wt, l3wtransformer.L3wTransformer), True)
         self.assertEqual(ngram_size, loaded_l3wt.ngram_size)
         self.assertEqual(lower, loaded_l3wt.lower)
-        self.assertEqual(mark_char, loaded_l3wt.mark_char)
         self.assertEqual(split_char, loaded_l3wt.split_char)
         self.assertEqual(max_ngrams, loaded_l3wt.max_ngrams)
         self.assertEqual(parallelize, loaded_l3wt.parallelize)
