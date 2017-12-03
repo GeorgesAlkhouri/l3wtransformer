@@ -84,8 +84,10 @@ class L3wTransformer:
                 flag_seq.append(base_value + 3)
             elif flag == 'mc':
                 flag_seq.append(base_value + 4)
+            elif flag == 'unk':
+                flag_seq.append(base_value + 5)
             else:
-                raise Exception('Unkown flag value')
+                raise Exception('Unknown flag value')
 
         return flag_seq
 
@@ -140,25 +142,31 @@ class L3wTransformer:
 
     def text_to_sequence(self, text, indexed_lookup_table):
         """Transforms a list of strings into a list of integer sequences from
-        indexed lookup table."""
-        trigrams = []
+        indexed lookup table.
+        Relaces unknown trigrams with self.max_ngrams + 5.
+        """
 
-        for word in text.split(self.split_char):
+        def word_to_ngrams_and_flags(word):
             ngrams_w = self.word_to_ngrams(word)
             flags = self.__flags_to_sequence(
                 self.__flags_from_word(word), base_value=self.max_ngrams)
-            trigrams.append((ngrams_w, flags))
+            return ngrams_w, flags
+
+        trigrams = list(map(word_to_ngrams_and_flags,
+                            text.split(self.split_char)))
 
         seq = []
-        for trigram_tuple in trigrams:
-            for trigram in trigram_tuple[0]:
+        unknown = self.max_ngrams + 5
+        for ngrams_w, flags in trigrams:
+            for trigram in ngrams_w:
                 if trigram in indexed_lookup_table:
                     seq.append(indexed_lookup_table[trigram])
                 else:
+                    seq.append(unknown)
                     logging.info(str(trigram) +
                                  ' not in indexed lookup table.')
-            if seq:
-                for flag in trigram_tuple[1]:
+            if len(list(filter(lambda x: x != unknown, seq))) > 0:
+                for flag in flags:
                     seq.append(flag)
         return seq
 

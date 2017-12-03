@@ -81,18 +81,25 @@ class Testl3wtransformerMethods(unittest.TestCase):
 
     def test_texts_to_sequences(self):
         l3wt = l3wtransformer.L3wTransformer()
+
         self.assertEqual(l3wt.texts_to_sequences(
-            ['Aaa aAa aaa AAA', 'Abb aba BbB']), [[], []])
+            ['a', 'b']), [[50005], [50005]])
 
         lookup_table = l3wt.fit_on_texts(['aaa'])
         self.assertEqual(l3wt.texts_to_sequences(['Aaa aAa aaa AAA', 'Abb aba BbB']), [
-                         [1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], []])
+                         [1, 3, 2, 50001, 1, 3, 2, 50004, 1, 3, 2, 50003, 1, 3, 2, 50002], [50005, 50005, 50005, 50005, 50005, 50005, 50005, 50005, 50005]])
 
         with self.assertRaises(Exception):
             l3wt = l3wtransformer.L3wTransformer()
             l3wt.texts_to_sequences([[], []])
             l3wt.texts_to_sequences([5, 1])
 
+    # def test_unknown_word(self):
+    #     max_ngrams = 50000
+    #     l3wt = l3wtransformer.L3wTransformer(max_ngrams=max_ngrams)
+    #     unknown_flag = max_ngrams + 5
+    #     l3wt.fit_on_texts(['a'])
+    #     self.assertEqual(l3wt.texts_to_sequences(['b']), [[unknown_flag]])
     # def test_numpy_input(self):
     #     l3wt = l3wtransformer.L3wTransformer()
     #     self.assertEqual(l3wt.texts_to_sequences(
@@ -118,6 +125,8 @@ class Testl3wtransformerMethods(unittest.TestCase):
         max_ngrams = 100
         parallelize = True
 
+        unknown = 105
+
         l3wt = l3wtransformer.L3wTransformer(
             ngram_size=3, lower=True, split_char=None, max_ngrams=100, parallelize=parallelize)
         l3wt.fit_on_texts(['abc'])
@@ -135,7 +144,8 @@ class Testl3wtransformerMethods(unittest.TestCase):
         self.assertEqual(parallelize, loaded_l3wt.parallelize)
         self.assertEqual(test_indexed_lookup_table,
                          loaded_l3wt.indexed_lookup_table)
-        self.assertEqual(loaded_l3wt.texts_to_sequences(['ab']), [[1, 103]])
+        self.assertEqual(loaded_l3wt.texts_to_sequences(
+            ['ab']), [[1, unknown, 103]])
 
 
 if __name__ == '__main__':
