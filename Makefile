@@ -1,13 +1,13 @@
 dist:
 	make test && make build && make upload
 build:
-	python setup.py bdist_wheel --universal
+	python3 setup.py bdist_wheel --universal
 
 test:
-	py.test -s --ignore tests/test_benchmark.py tests/
+	python3 -m pytest -s --ignore tests/test_benchmark.py tests/
 
 benchmark:
-	py.test -s tests/test_benchmark.py
+	python3 -m pytest -s tests/test_benchmark.py
 
 upload:
 	twine upload dist/*
