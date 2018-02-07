@@ -147,6 +147,20 @@ class Testl3wtransformerMethods(unittest.TestCase):
         self.assertEqual(loaded_l3wt.texts_to_sequences(
             ['ab']), [[1, unknown, 103]])
 
+    def test_to_hot_vector(self):
+        l3wt = l3wtransformer.L3wTransformer()
+        l3wt.fit_on_texts(['abc'])
+        res = l3wt.texts_to_hot_vectors(['abc'])
+        self.assertEquals(res, [[1, 1, 1]])
+
+        res = l3wt.texts_to_hot_vectors(['ab'])
+        self.assertEquals(res, [[1, 0, 0]])
+
+        res = l3wt.texts_to_hot_vectors([''])
+        self.assertEquals(res, [[0, 0, 0]])
+
+        res = l3wt.texts_to_hot_vectors(['ab abc',])
+        self.assertEquals(res, [[2, 1, 1]])
 
 if __name__ == '__main__':
     unittest.main()

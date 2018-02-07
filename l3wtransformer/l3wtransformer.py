@@ -2,11 +2,14 @@ import operator
 import logging
 import pickle
 from functools import reduce
+from itertools import chain
 
 from pathos.multiprocessing import ProcessingPool as Pool
 from nltk.util import ngrams
+import numpy as np
 
 
+# TODO white spaces?
 class L3wTransformer:
     """
     Parameters
@@ -170,6 +173,27 @@ class L3wTransformer:
                     seq.append(flag)
         return seq
 
+    def texts_to_hot_vectors(self, texts):
+
+        def text_to_hot_vec(text):
+            hot_vec = np.zeros(len(self.indexed_lookup_table), dtype='int')
+            trigrams = list(chain.from_iterable(map(self.word_to_ngrams,
+                                                    text.split(self.split_char))))
+            for tri in trigrams:
+                if tri in self.indexed_lookup_table:
+                    index = self.indexed_lookup_table[tri] - 1
+                    hot_vec[index] = hot_vec[index] + 1
+                else:
+                    logging.info(str(tri) +
+                                 ' not in indexed lookup table.')
+
+            return list(hot_vec)
+
+        if not texts:
+            return []
+
+        return list(map(text_to_hot_vec, texts))
+
     def texts_to_sequences(self, texts):
         """Convenient method to tansform new texts into integer sequences."""
         if not texts:
@@ -179,8 +203,9 @@ class L3wTransformer:
             with Pool(None) as p:
                 res = p.map(lambda text: self.text_to_sequence(
                     text, self.indexed_lookup_table), texts)
-        res = list(map(lambda text: self.text_to_sequence(
-            text, self.indexed_lookup_table), texts))
+        else:
+            res = list(map(lambda text: self.text_to_sequence(
+                text, self.indexed_lookup_table), texts))
 
         return res
 
